@@ -250,6 +250,7 @@
         let best = parseInt(localStorage.getItem('snakeBest') || '0');
         let gameLoop = null;
         let gameOver = false;
+        let started = false;
         let speed = 100;
         let frame = 0;
 
@@ -261,15 +262,19 @@
                 { x: x - 1, y },
                 { x: x - 2, y }
             ];
-            direction = { x: 1, y: 0 };
+            direction = { x: 0, y: 0 };
             directionQueue = [];
             score = 0;
             speed = 100;
             gameOver = false;
+            started = false;
             frame = 0;
             scoreEl.textContent = '0';
             bestEl.textContent = best;
-            overlay.classList.remove('show');
+            overlay.classList.add('show');
+            overlay.querySelector('.game-over-text').textContent = '贪吃蛇';
+            overlay.querySelector('.final-score').textContent = '';
+            overlay.querySelector('.hint').textContent = '按 WASD 开始游戏';
             btnRestart.classList.remove('show');
             spawnFood();
         }
@@ -287,7 +292,7 @@
         }
 
         function update() {
-            if (gameOver) return;
+            if (gameOver || !started) return;
 
             if (directionQueue.length > 0) {
                 const next = directionQueue.shift();
@@ -426,9 +431,8 @@
                 }
             });
 
-            if (i > 0 && snake.length > 0) {
+            if (snake.length > 1) {
                 const last = snake[snake.length - 1];
-                const prev = snake[snake.length - 2];
                 const lx = last.x * GRID + GRID / 2;
                 const ly = last.y * GRID + GRID / 2;
                 const tLast = (snake.length - 1) / (snake.length + 5);
@@ -453,7 +457,9 @@
                 bestEl.textContent = best;
                 localStorage.setItem('snakeBest', best);
             }
+            overlay.querySelector('.game-over-text').textContent = '游戏结束';
             finalScoreEl.textContent = '最终得分: ' + score;
+            overlay.querySelector('.hint').textContent = '按 空格键 重新开始';
             overlay.classList.add('show');
             btnRestart.classList.add('show');
         }
@@ -501,6 +507,13 @@
             }
 
             if (newDir) {
+                if (!started) {
+                    started = true;
+                    direction = newDir;
+                    directionQueue = [newDir];
+                    overlay.classList.remove('show');
+                    return;
+                }
                 const lastDir = directionQueue.length > 0
                     ? directionQueue[directionQueue.length - 1]
                     : direction;
